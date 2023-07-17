@@ -1,4 +1,9 @@
 # Web-Scraper
 Download multiple images from google
 
-you need to add a chromedriver in your project directory !!
+#### Ìnstall requirements with command:
+``pip install -r requirements.txt``
+#### Then run command:
+``python main.py -s <search key> -n <number of images to download>``
+#### To run default example just run:
+``python main.py``
