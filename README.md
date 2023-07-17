@@ -1,15 +1,15 @@
 # Google-Image-Downloader
-Download multiple images from google
+## Download multiple images from google
 
-#### Install requirements with command:
+### Install requirements with command:
 ```
 pip install -r requirements.txt
 ```
-#### Then run command:
+### Then run command:
 ```
 python main.py -s <search key> -n <number of images to download>
 ```
-#### To run default example just run:
+### To run default example just run:
 ```
 python main.py
 ```
