@@ -10,4 +10,4 @@ Download multiple images from google
 
 ![test](https://github.com/IsekaiCode/Google-Image-Downloader/assets/109307799/4c18b663-910a-41cc-94f0-36dae86c315b)
 
-![result](https://github.com/IsekaiCode/Google-Image-Downloader/assets/109307799/6960450a-b7a9-4da3-8785-13bdcd0f362b)
+![result](https://github.com/IsekaiCode/Google-Image-Downloader/assets/109307799/cbb6a730-ebde-48ad-b923-d94cec46ef2e)
