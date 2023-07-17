@@ -1,47 +1,89 @@
 import os
 import time
 import base64
-import requests
+import argparse
 
+import requests
 from selenium import webdriver
+from selenium.common.exceptions import (ElementClickInterceptedException,
+                                        NoSuchWindowException,
+                                        TimeoutException)
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from urllib3.exceptions import ProtocolError
 from webdriver_manager.chrome import ChromeDriverManager
 
-search = input('what do you wanna search for : ')
+REQUEST_HEADER = {
+    'User-Agent': "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36"}
 
-def Get(url):
-    driver = webdriver.Chrome(ChromeDriverManager().install())
-    driver.get(url)
-    time.sleep(3)
-    thumbnails = driver.find_elements(By.CLASS_NAME, "Q4LuWd")
-    image_urls = set()
 
-    for thumbnail in thumbnails:
+def Get(search_key, num_images):
+    try:
+        url = f'https://www.google.com/search?q={search_key.replace(" ", "+")}&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjH7trNi7b5AhW2hP0HHRFYAYUQ_AUoAXoECAIQAw&biw=1536&bih=731&dpr=1.25'
+
+        driver = webdriver.Chrome(service=ChromeService(
+            ChromeDriverManager().install()))
+        driver.get(url)
+        driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+        time.sleep(3)
+        thumbnails = driver.find_elements(By.CLASS_NAME, "bRMDJf.islir")
+        image_urls = list()
+        timeout = 60
+
+    except NoSuchWindowException:
+        print("error: search window not found!!!")
+        return list()
+
+    i = 0
+    skips = 0
+    while (i != num_images) and (skips != 15):
         try:
-            thumbnail.click()
-            time.sleep(3)
-            images = driver.find_elements(By.CLASS_NAME, "n3VNCb")
-            for img in images:
-                if img.get_attribute('src'):
-                    image_urls.add(img.get_attribute('src'))
-        except:
-            print(thumbnail)
+            element_clickable = EC.element_to_be_clickable(thumbnails[i+skips])
+            WebDriverWait(driver, timeout).until(element_clickable).click()
+            element_present = EC.presence_of_element_located(
+                (By.CLASS_NAME, "r48jcc.pT0Scc.iPVvYb"))
+            WebDriverWait(driver, timeout).until(element_present)
+            img = driver.find_element(By.CLASS_NAME, "r48jcc.pT0Scc.iPVvYb")
+            image_urls.append(img.get_attribute('src'))
+            i += 1
+
+        except TimeoutException:
+            print("\nerror: this image couldn't load: ")
+            print(thumbnails[i+skips].get_attribute('src'))
+            skips += 1
+
+        except ElementClickInterceptedException:
+            print("\nerror: couldn't click this image: ")
+            print(thumbnails[i+skips].get_attribute('src'))
+            skips += 1
+
+        except NoSuchWindowException:
+            print("\nerror: search window not found!!!")
+            return image_urls
+
+        except ProtocolError:
+            print("\nerror: search window not found!!!")
+            return image_urls
 
     driver.close()
     return list(image_urls)
 
 
 def Download(images):
+    skips = 0
     if not os.path.isdir('imgs'):
         os.makedirs('imgs')
-    for index in range(len(images)):
-        image_data = images[index]
-        with open(f'imgs/{index}.jpg', 'wb') as handle:
-
+    for index in range(1, len(images)+1):
+        image_data = images[index-1]
+        skip = False
+        with open(f'imgs/{index-skips}.jpg', 'wb') as handle:
+            print("Downloading image n°", index)
             if image_data and 'http' in image_data:
-                r = requests.get(image_data)
+                r = requests.get(image_data, headers=REQUEST_HEADER)
                 if not r.ok:
-                    print(r)
+                    skip = True
                 else:
                     handle.write(r.content)
 
@@ -51,13 +93,27 @@ def Download(images):
                     plain_data = base64.b64decode(data)
                     handle.write(plain_data)
                 except:
-                    print(image_data)
+                    skip = True
+
+        if skip:
+            print("couldn't download: \n", image_data)
+            os.remove(f'imgs/{index-skips}.jpg')
+            skips += 1
 
 
-def main(url):
-    images = Get(url)
-    print(f'found {len(images)} images\nBegin Downloading..')
+def main():
+    parser = argparse.ArgumentParser(description='Scrape Google Images')
+    parser.add_argument('-s', '--search', default='cat',
+                        type=str, help='search key')
+    parser.add_argument('-n', '--num_images', default=5,
+                        type=int, help='num images to dwonload')
+    args = parser.parse_args()
+    print("\nFetching Data")
+    images = Get(args.search, args.num_images)
+    print(f'\nfound {len(images)} images\n\nBegin Downloading..\n')
     Download(images)
+    print("\nFinished Downloading.")
 
 
-main(f'https://www.google.com/search?q={search}&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjH7trNi7b5AhW2hP0HHRFYAYUQ_AUoAXoECAIQAw&biw=1536&bih=731&dpr=1.25')
+if __name__ == '__main__':
+    main()
