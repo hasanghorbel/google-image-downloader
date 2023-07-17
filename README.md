@@ -1,4 +1,4 @@
-# Web-Scraper
+# Google-Img-Downloader
 Download multiple images from google
 
 #### Install requirements with command:
