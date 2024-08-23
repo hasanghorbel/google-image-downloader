@@ -16,8 +16,14 @@ from urllib3.exceptions import ProtocolError
 from webdriver_manager.chrome import ChromeDriverManager
 
 REQUEST_HEADER = {
-    'User-Agent': "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36"}
+    'User-Agent': 'python-requests/2.31.0',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept': '*/*',
+    'Connection': 'keep-alive',
+}
 
+CLICKABLE_IMG_CLASS = "czzyk.XOEbc"
+IMG_CLASS = "sFlh5c.FyHeAf.iPVvYb"
 
 def Get(search_key, num_images):
     try:
@@ -26,9 +32,8 @@ def Get(search_key, num_images):
         driver = webdriver.Chrome(service=ChromeService(
             ChromeDriverManager().install()))
         driver.get(url)
-        driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
         time.sleep(3)
-        thumbnails = driver.find_elements(By.CLASS_NAME, "bRMDJf.islir")
+        thumbnails = driver.find_elements(By.CLASS_NAME, CLICKABLE_IMG_CLASS)
         image_urls = list()
         timeout = 60
 
@@ -43,9 +48,9 @@ def Get(search_key, num_images):
             element_clickable = EC.element_to_be_clickable(thumbnails[i+skips])
             WebDriverWait(driver, timeout).until(element_clickable).click()
             element_present = EC.presence_of_element_located(
-                (By.CLASS_NAME, "r48jcc.pT0Scc.iPVvYb"))
+                (By.CLASS_NAME, IMG_CLASS))
             WebDriverWait(driver, timeout).until(element_present)
-            img = driver.find_element(By.CLASS_NAME, "r48jcc.pT0Scc.iPVvYb")
+            img = driver.find_element(By.CLASS_NAME, IMG_CLASS)
             image_urls.append(img.get_attribute('src'))
             i += 1
 
